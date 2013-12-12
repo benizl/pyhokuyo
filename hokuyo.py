@@ -20,9 +20,13 @@ class HokuyoURG:
 			self.port.flushInput()
 			self.port.write(msg)
 
-			c = self.port.readline()
-			while c != msg:
+			for tries in range(10):
 				c = self.port.readline()
+				if c == msg:
+					break
+			else:
+				print("Can't change baud rate")
+				return
 
 			s = self.port.readline()
 			self.port.readline() # Empty
@@ -146,7 +150,8 @@ class HokuyoURG:
 		
 
 if __name__ == '__main__':
-	h = HokuyoURG('/dev/ttyACM0')
+	import sys
+	h = HokuyoURG(sys.argv[1])
 	print("Scan once: {}".format(len(h.scan_once())))
 
 	h.start_scan()

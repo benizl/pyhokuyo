@@ -2,7 +2,7 @@
 
 import serial
 
-class HokyuoException(Exception):
+class HokuyoException(Exception):
 	pass
 
 class HokuyoURG:
@@ -38,6 +38,11 @@ class HokuyoURG:
 		self.port.close()
 		self.port = serial.Serial(port, run_baud, timeout=1)
 		self.port.flushInput()
+
+		print(self.port)
+
+	def close(self):
+		self.port.close()
 
 	@staticmethod
 	def _encode_n(d, n):
@@ -107,9 +112,12 @@ class HokuyoURG:
 		self.port.write(msg)
 
 		# Wait for echo (throw away anything at the head of the rx buffer)
-		l = self.port.readline()
-		while l != msg:
+		for i in range(10):
 			l = self.port.readline()
+			if l == msg:
+				break
+		else:
+			print("WARNING: Hokuyo didn't respond to single scan start command")
 
 		self.port.readline() # status
 		self.port.readline() # Empty
@@ -130,12 +138,20 @@ class HokuyoURG:
 		self.port.write(msg)
 
 		# Wait for echo (throw away anything at the head of the rx buffer)
-		l = self.port.readline()
-		while l != msg:
+		for i in range(10):
 			l = self.port.readline()
+			if l == msg:
+				break
+		else:
+			print("WARNING: Hokuyo not responding to scan start")
 
 		self.port.readline() # status
 		self.port.readline() # Empty
+
+		if cluster == 0:
+			cluster = 1
+
+		self._expect_length = (end - start + 1) / cluster
 
 	def read_scan(self):
 
@@ -143,7 +159,10 @@ class HokuyoURG:
 		self.port.readline() # 99b
 		self.port.readline() # timestamp
 
-		return self._read_scan()
+		scan = self._read_scan()
+
+		#print(len(scan), self._expect_length)
+		return scan if len(scan) == self._expect_length else None
 
 	def end_scan(self):
 		self.port.write("QT\n")
@@ -155,7 +174,7 @@ if __name__ == '__main__':
 	print("Scan once: {}".format(len(h.scan_once())))
 
 	h.start_scan()
-	for i in range(5):
+	while True:
 		print("Scan: {}".format(len(h.read_scan())))
 
 	h.end_scan()

@@ -39,7 +39,7 @@ class HokuyoURG:
 		self.port = serial.Serial(port, run_baud, timeout=1)
 		self.port.flushInput()
 
-		print(self.port)
+		#print(self.port)
 
 	def close(self):
 		self.port.close()

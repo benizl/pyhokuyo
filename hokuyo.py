@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import math
 import serial
 
 class HokuyoException(Exception):
@@ -157,7 +158,7 @@ class HokuyoURG:
 		if cluster == 0:
 			cluster = 1
 
-		self._expect_length = (end - start + 1) / cluster
+		self._expect_length = math.ceil((end - start) / cluster) + 1
 
 	def read_scan(self):
 

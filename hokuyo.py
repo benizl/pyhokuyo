@@ -9,6 +9,7 @@ class HokuyoURG:
 	def __init__(self, port, initial_baud=19200, run_baud=115200, steps=768):
 
 		self.steps=steps
+		self.cluster_factor=1
 
 		self.port = serial.Serial(port, initial_baud, timeout=1)
 		self.port.write('SCIP2.0\n')
@@ -63,6 +64,7 @@ class HokuyoURG:
 		return d
 
 	def index_to_degrees(self, i):
+		i = i  * self.cluster_factor
 		mid = self.steps / 2.0
 
 		return (i - mid) * (240.0 / self.steps)
@@ -105,6 +107,8 @@ class HokuyoURG:
 		if end is None:
 			end=self.steps
 
+		self.cluster_factor = cluster if cluster > 0 else 1
+
 		msg = "MD{start:04d}{end:04d}{cluster:02d}001\n".format(
 			start=start, end=end, cluster=cluster)
 
@@ -130,6 +134,8 @@ class HokuyoURG:
 	def start_scan(self, start=0, end=None, cluster=0, interval=0):
 		if end is None:
 			end=self.steps
+
+		self.cluster_factor = cluster if cluster > 0 else 1
 
 		msg = "MD{start:04d}{end:04d}{cluster:02d}{interval:02d}0\n".format(
 			start=start, end=end, cluster=cluster, interval=interval)
